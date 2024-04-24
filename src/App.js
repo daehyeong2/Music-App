@@ -181,17 +181,7 @@ function App() {
       };
     }
   }, [music, setIsPlaying, music_list, volume, audio]);
-  useEffect(() => {
-    if (audio) {
-      audio.addEventListener("timeupdate", handleCurrentTimeChange);
-      return () => {
-        if (audio) {
-          audio.removeEventListener("timeupdate", handleCurrentTimeChange);
-        }
-      };
-    }
-  }, [audio, handleCurrentTimeChange]);
-  const nextPlease = () => {
+  const nextPlease = useCallback(() => {
     if (music_list) {
       audio.pause();
       setAudio(null);
@@ -201,7 +191,7 @@ function App() {
       setCurrentTime(0);
       setMusic((prev) => (prev === music_list.length - 1 ? 0 : prev + 1));
     }
-  };
+  }, [audio, music_list]);
   const prevPlease = () => {
     if (music_list) {
       audio.pause();
@@ -223,6 +213,19 @@ function App() {
       setIsPlaying(!audio.paused);
     }
   }, [audio]);
+  useEffect(() => {
+    if (audio) {
+      audio.addEventListener("ended", () => {
+        nextPlease();
+      });
+      audio.addEventListener("timeupdate", handleCurrentTimeChange);
+      return () => {
+        if (audio) {
+          audio.removeEventListener("timeupdate", handleCurrentTimeChange);
+        }
+      };
+    }
+  }, [audio, handleCurrentTimeChange, nextPlease]);
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === " ") {
